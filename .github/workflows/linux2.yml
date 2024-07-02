@@ -1,0 +1,76 @@
+name: Linux2
+
+on:
+    workflow_dispatch:
+
+jobs:
+
+  linux:
+    name: Rocky Linux 8
+    runs-on: ubuntu-latest
+
+    env:
+      UPLOAD_ARTIFACT: "true"
+
+    steps:
+      - name: Get repository name.
+        run: echo "REPO_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
+
+      - name: Clone.
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          path: ${{ env.REPO_NAME }}
+
+      - name: First set up.
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+          docker pull ghcr.io/tdesktop/centos_env
+          docker tag ghcr.io/tdesktop/centos_env tdesktop:centos_env
+
+      - name: Telegram Desktop build.
+        run: |
+          cd $REPO_NAME
+
+          DEFINE=""
+          if [ -n "${{ matrix.defines }}" ]; then
+            DEFINE="-D ${{ matrix.defines }}=ON"
+            echo Define from matrix: $DEFINE
+            echo "ARTIFACT_NAME=materialgram_${{ matrix.defines }}" >> $GITHUB_ENV
+          else
+            echo "ARTIFACT_NAME=materialgram" >> $GITHUB_ENV
+          fi
+
+          docker run --rm \
+          -v $PWD:/usr/src/materialgram \
+          -e CONFIG=MinSizeRel \
+          tdesktop:centos_env \
+          /usr/src/materialgram/Telegram/build/docker/centos_env/build.sh \
+          -D CMAKE_EXE_LINKER_FLAGS="-s" \
+          $DEFINE
+
+      - name: Check.
+        run: |
+          filePath="$REPO_NAME/out/MinSizeRel/materialgram"
+          if test -f "$filePath"; then
+            echo "Build successfully done! :)"
+
+            size=$(stat -c %s "$filePath")
+            echo "File size of ${filePath}: ${size} Bytes."
+          else
+            echo "Build error, output file does not exist."
+            exit 1
+          fi
+
+      - name: Move artifact.
+        if: env.UPLOAD_ARTIFACT == 'true'
+        run: |
+          cd $REPO_NAME/out/MinSizeRel
+          sudo mkdir artifact
+          sudo mv {materialgram,Updater} artifact/
+      - uses: actions/upload-artifact@v4
+        if: env.UPLOAD_ARTIFACT == 'true'
+        name: Upload artifact.
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.REPO_NAME }}/out/MinSizeRel/artifact/
