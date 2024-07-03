@@ -25,7 +25,8 @@ jobs:
         with:
           submodules: recursive
           path: ${{ env.REPO_NAME }}
-          ref: ${{ env.TAGNAME }}
+          fetch-depth: 0
+      - run: git checkout ${{ env.TAGNAME }}
 
       - name: Free Disk Space
         uses: jlumbroso/free-disk-space@main
