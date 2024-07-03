@@ -14,21 +14,25 @@ jobs:
       UPLOAD_ARTIFACT: "true"
 
     steps:
-      - name: Get repository name.
+      - name: Get repository name
         run: echo "REPO_NAME=${GITHUB_REPOSITORY##*/}" >> $GITHUB_ENV
+
+      - name: Set Tag Name
+        run: echo "TAGNAME=$(echo ${{ github.ref }} | cut -d '/' -f3)" >> $GITHUB_ENV 
 
       - name: Clone.
         uses: actions/checkout@v4
         with:
           submodules: recursive
           path: ${{ env.REPO_NAME }}
+          ref: ${{ env.TAGNAME }}
 
 
       - name: Free Disk Space
         uses: jlumbroso/free-disk-space@main
         with:
-         tool-cache: true
-         android: true
+         tool-cache: false
+         android: false
          dotnet: true
          haskell: true
          large-packages: false
@@ -79,17 +83,22 @@ jobs:
             exit 1
           fi
 
-      - name: Move artifact
-        if: env.UPLOAD_ARTIFACT == 'true'
+      - name: Tar artifact
         run: |
-          cd $REPO_NAME/out/Release
-          sudo mkdir artifact
-          sudo mv materialgram artifact/
-#          sudo mv {materialgram,Updater} artifact/
+          mv $REPO_NAME/out/Release/materialgram $REPO_NAME/scripts/ && cd $REPO_NAME/scripts 
+          chmod +x *
+          tar -czvf linux_amd64_materialgram_${{ env.TAGNAME }}.tar.gz *
       
       - uses: actions/upload-artifact@v4
         if: env.UPLOAD_ARTIFACT == 'true'
         name: Upload artifact.
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.REPO_NAME }}/out/Release/artifact/
+          path: ${{ env.REPO_NAME }}/scripts/*.tar.gz
+
+     - name: Upload to Release
+       uses: softprops/action-gh-release@v2
+       with:
+         files: ${{ env.REPO_NAME }}/scripts/*.tar.gz
+         name: ${{ env.TAGNAME }}
+         tag_name: ${{ env.TAGNAME }}
