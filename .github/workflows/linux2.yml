@@ -32,7 +32,7 @@ jobs:
          haskell: true
          large-packages: true
          docker-images: true
-         swap-storage: true
+         swap-storage: false
 
       - name: First set up.
         run: |
@@ -43,6 +43,7 @@ jobs:
       - name: Telegram Desktop build.
         run: |
           cd $REPO_NAME
+          ls /usr/src/materialgram
 
           DEFINE=""
           if [ -n "${{ matrix.defines }}" ]; then
@@ -62,7 +63,7 @@ jobs:
           -D TDESKTOP_API_ID=27089606 \
           -D TDESKTOP_API_HASH=d14ed11b1ec58dfe89233e976834ea73 \
           -D DESKTOP_APP_DISABLE_AUTOUPDATE=True \
-          -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
+          -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
           $DEFINE
 
       - name: Check.
