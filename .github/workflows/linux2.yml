@@ -84,7 +84,8 @@ jobs:
         run: |
           cd $REPO_NAME/out/Release
           sudo mkdir artifact
-          sudo mv {materialgram,Updater} artifact/
+          sudo mv materialgram artifact/
+#          sudo mv {materialgram,Updater} artifact/
       
       - uses: actions/upload-artifact@v4
         if: env.UPLOAD_ARTIFACT == 'true'
