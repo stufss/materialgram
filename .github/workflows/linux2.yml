@@ -32,7 +32,7 @@ jobs:
           path: ${{ env.REPO_NAME }}
 
 
-      - name: Free Disk Space (Ubuntu)
+      - name: Free Disk Space
         uses: jlumbroso/free-disk-space@main
         with:
          tool-cache: true
@@ -43,13 +43,13 @@ jobs:
          docker-images: true
          swap-storage: false
 
-      - name: First set up.
+      - name: Sync Docker Image
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
           docker pull ghcr.io/telegramdesktop/tdesktop/centos_env
           docker tag ghcr.io/telegramdesktop/tdesktop/centos_env tdesktop:centos_env
 
-      - name: Telegram Desktop build.
+      - name: Build ${{ github.event.inputs.REL_TYPE }}
         run: |
           cd $REPO_NAME
 
@@ -74,7 +74,7 @@ jobs:
           -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON \
           $DEFINE
 
-      - name: Check.
+      - name: Check
         run: |
           filePath="$REPO_NAME/out/${{ github.event.inputs.REL_TYPE }}/materialgram"
           if test -f "$filePath"; then
@@ -87,12 +87,13 @@ jobs:
             exit 1
           fi
 
-      - name: Move artifact.
+      - name: Move artifact
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
           cd $REPO_NAME/out/${{ github.event.inputs.REL_TYPE }}
           sudo mkdir artifact
           sudo mv {materialgram,Updater} artifact/
+      
       - uses: actions/upload-artifact@v4
         if: env.UPLOAD_ARTIFACT == 'true'
         name: Upload artifact.
