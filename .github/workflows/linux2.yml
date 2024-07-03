@@ -5,13 +5,9 @@ on:
     workflow_dispatch:
      inputs:
       REL_TYPE:
-        type: choice
-        description: Build Type
+        description: 'REL_TYPE'
+        required: true
         default: 'Release'
-        options:
-        - Release
-        - MinSizeRel
-        - Debug
 
 jobs:
 
