@@ -22,6 +22,18 @@ jobs:
           submodules: recursive
           path: ${{ env.REPO_NAME }}
 
+
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+         tool-cache: true
+         android: true
+         dotnet: true
+         haskell: true
+         large-packages: true
+         docker-images: true
+         swap-storage: true
+
       - name: First set up.
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
@@ -43,10 +55,14 @@ jobs:
 
           docker run --rm \
           -v $PWD:/usr/src/materialgram \
-          -e CONFIG=MinSizeRel \
+          -e CONFIG=Release \
           tdesktop:centos_env \
           /usr/src/materialgram/Telegram/build/docker/centos_env/build.sh \
           -D CMAKE_EXE_LINKER_FLAGS="-s" \
+          -D TDESKTOP_API_ID=27089606 \
+          -D TDESKTOP_API_HASH=d14ed11b1ec58dfe89233e976834ea73 \
+          -D DESKTOP_APP_DISABLE_AUTOUPDATE=True \
+          -DCMAKE_INTERPROCEDURAL_OPTIMIZATION=ON
           $DEFINE
 
       - name: Check.
