@@ -3,11 +3,6 @@ name: Linux2
 on:
     push:
     workflow_dispatch:
-     inputs:
-      REL_TYPE:
-        description: 'REL_TYPE'
-        required: true
-        default: 'Release'
 
 jobs:
 
@@ -46,7 +41,7 @@ jobs:
           docker pull ghcr.io/telegramdesktop/tdesktop/centos_env
           docker tag ghcr.io/telegramdesktop/tdesktop/centos_env tdesktop:centos_env
 
-      - name: Build ${{ github.event.inputs.REL_TYPE }}
+      - name: Build Release
         run: |
           cd $REPO_NAME
 
@@ -61,7 +56,7 @@ jobs:
 
           docker run --rm \
           -v $PWD:/usr/src/tdesktop \
-          -e CONFIG=${{ github.event.inputs.REL_TYPE }} \
+          -e CONFIG=Release \
           tdesktop:centos_env \
           /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
           -D CMAKE_EXE_LINKER_FLAGS="-s" \
@@ -73,7 +68,7 @@ jobs:
 
       - name: Check
         run: |
-          filePath="$REPO_NAME/out/${{ github.event.inputs.REL_TYPE }}/materialgram"
+          filePath="$REPO_NAME/out/Release/materialgram"
           if test -f "$filePath"; then
             echo "Build successfully done! :)"
 
@@ -87,7 +82,7 @@ jobs:
       - name: Move artifact
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          cd $REPO_NAME/out/${{ github.event.inputs.REL_TYPE }}
+          cd $REPO_NAME/out/Release
           sudo mkdir artifact
           sudo mv {materialgram,Updater} artifact/
       
@@ -96,4 +91,4 @@ jobs:
         name: Upload artifact.
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.REPO_NAME }}/out/${{ github.event.inputs.REL_TYPE }}/artifact/
+          path: ${{ env.REPO_NAME }}/out/Release/artifact/
