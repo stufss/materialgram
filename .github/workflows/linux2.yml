@@ -3,6 +3,14 @@ name: Linux2
 on:
     push:
     workflow_dispatch:
+     inputs:
+      REL_TYPE:
+        type: choice
+        description: Build Type
+        options:
+        - Release
+        - MinSizeRel
+        - Debug
 
 jobs:
 
@@ -56,7 +64,7 @@ jobs:
 
           docker run --rm \
           -v $PWD:/usr/src/tdesktop \
-          -e CONFIG=Release \
+          -e CONFIG=${{ github.event.inputs.REL_TYPE }} \
           tdesktop:centos_env \
           /usr/src/tdesktop/Telegram/build/docker/centos_env/build.sh \
           -D CMAKE_EXE_LINKER_FLAGS="-s" \
@@ -68,7 +76,7 @@ jobs:
 
       - name: Check.
         run: |
-          filePath="$REPO_NAME/out/MinSizeRel/materialgram"
+          filePath="$REPO_NAME/out/${{ github.event.inputs.REL_TYPE }}/materialgram"
           if test -f "$filePath"; then
             echo "Build successfully done! :)"
 
@@ -82,7 +90,7 @@ jobs:
       - name: Move artifact.
         if: env.UPLOAD_ARTIFACT == 'true'
         run: |
-          cd $REPO_NAME/out/MinSizeRel
+          cd $REPO_NAME/out/${{ github.event.inputs.REL_TYPE }}
           sudo mkdir artifact
           sudo mv {materialgram,Updater} artifact/
       - uses: actions/upload-artifact@v4
@@ -90,4 +98,4 @@ jobs:
         name: Upload artifact.
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.REPO_NAME }}/out/MinSizeRel/artifact/
+          path: ${{ env.REPO_NAME }}/out/${{ github.event.inputs.REL_TYPE }}/artifact/
