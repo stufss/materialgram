@@ -65,6 +65,7 @@ jobs:
         run: |
           cd $REPO_NAME/arch
           bash setup.sh
+          VERSION=${{ env.TAGNAME }} bash debian.sh
           tar -czvf materialgram-${{ env.TAGNAME }}.tar.gz usr
 
       - name: Upload artifact
@@ -79,7 +80,9 @@ jobs:
           name: ${{ env.TAGNAME }}
           tag_name: ${{ env.TAGNAME }}
           token: ${{ secrets.PAT }}
-          files: ${{ env.REPO_NAME }}/arch/materialgram-${{ env.TAGNAME }}.tar.gz
+          files: |
+              ${{ env.REPO_NAME }}/arch/materialgram-${{ env.TAGNAME }}.tar.gz
+              ${{ env.REPO_NAME }}/materialgram*.deb
 
   trigger-workflow:
     runs-on: ubuntu-latest
