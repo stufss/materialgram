@@ -5,11 +5,6 @@ on:
     tags:
       - '*'
   workflow_dispatch:
-    inputs:
-      pkgrel:
-        description: pkgrel
-        type: number
-        required: true
 
 jobs:
   build:
@@ -34,7 +29,7 @@ jobs:
       - name: Set Tag Name
         run: |
           cd $REPO_NAME
-          echo "TAGNAME=$(git describe --tags `git rev-list --tags --max-count=1`))" >> $GITHUB_ENV
+          echo "TAGNAME=$(git describe --tags `git rev-list --tags --max-count=1`)" >> $GITHUB_ENV
           echo "::set-output name=TAGNAME::$TAGNAME"
 
       - name: Build materialgram
@@ -65,7 +60,7 @@ jobs:
         run: |
           cd $REPO_NAME/arch
           bash setup.sh
-          VERSION=${{ env.TAGNAME }} bash debian.sh
+          VERSION=5.2.1.1 bash debian.sh
           tar -czvf materialgram-${{ env.TAGNAME }}.tar.gz usr
 
       - name: Upload artifact
@@ -81,28 +76,5 @@ jobs:
           tag_name: ${{ env.TAGNAME }}
           token: ${{ secrets.PAT }}
           files: |
-              ${{ env.REPO_NAME }}/arch/materialgram-${{ env.TAGNAME }}.tar.gz
-              ${{ env.REPO_NAME }}/materialgram*.deb
-
-  trigger-workflow:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-     
-      - name: Set PKGREL
-        run: |
-          if [ "${{ github.event_name }}" == 'workflow_dispatch' ]; then
-            PKGREL="${{ github.event.inputs.pkgrel }}"
-          else
-            PKGREL="1"
-          fi
-          echo "PKGREL=$PKGREL" >> $GITHUB_ENV
-
-      - name: Trigger repository dispatch event
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: ${{ secrets.OKsPAT }}
-          repository: materialgram/materialgram-bin
-          event-type: new-release
-          client-payload: '{"tagname": "${{ needs.build.outputs.TAGNAME }}", "pkgrel": "${{ env.PKGREL }}"}'
-
+            ${{ env.REPO_NAME }}/arch/materialgram-${{ env.TAGNAME }}.tar.gz
+            ${{ env.REPO_NAME }}/materialgram*.deb
